@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="app-version" content="4.0.0">
+<title>Prince AI</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#080c12;
+color:white;
+overflow:hidden
+}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+#app{
+display:grid;
+grid-template-columns:250px 1fr;
+height:100vh
+}
+.sidebar{
+background:#0d141d;
+border-right:1px solid #253241;
+padding:15px;
+overflow:auto
+}
+.logo{
+font-size:23px;
+font-weight:bold;
+padding:15px 10px;
+margin-bottom:10px
+}
+.nav button{
+width:100%;
+border:0;
+background:transparent;
+color:#b9c4d0;
+padding:12px;
+margin:3px 0;
+border-radius:12px;
+text-align:left
+}
+.nav button:hover,
+.nav button.active{
+background:#1c2938;
+color:white
+}
+.main{
+display:flex;
+flex-direction:column;
+min-width:0
+}
+.topbar{
+height:65px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 20px;
+background:#0c131c;
+border-bottom:1px solid #253241
+}
+.content{
+flex:1;
+overflow:auto;
+padding:20px
+}
+.page{display:none}
+.page.active{display:block}
+.card{
+background:#111a24;
+border:1px solid #273544;
+border-radius:18px;
+padding:18px;
+margin-bottom:16px
+}
+input,textarea,select{
+width:100%;
+background:#080e15;
+color:white;
+border:1px solid #2b3a4a;
+border-radius:12px;
+padding:12px;
+outline:none
+}
+textarea{
+min-height:110px;
+resize:vertical
+}
+.btn{
+border:0;
+background:#635bff;
+color:white;
+padding:11px 17px;
+border-radius:12px
+}
+.btn.secondary{background:#293746}
+.btn.success{background:#238653}
+.btn.danger{background:#a03343}
+.btn.fileBtn{
+font-size:22px;
+padding:8px 14px
+}
+.row{
+display:flex;
+gap:10px;
+flex-wrap:wrap
+}
+.muted{color:#91a0b0}
+.badge{
+display:inline-block;
+padding:5px 10px;
+border-radius:20px;
+background:#273746;
+font-size:12px
+}
+.online{background:#17683f}
+.offline{background:#71313a}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:14px
+}
+.stat{
+background:#151f2a;
+border:1px solid #293847;
+border-radius:16px;
+padding:18px
+}
+.big{
+font-size:25px;
+font-weight:bold
+}
+.chat{
+height:calc(100vh - 125px);
+display:flex;
+flex-direction:column
+}
+.messages{
+flex:1;
+overflow:auto;
+padding:10px
+}
+.msg{
+max-width:80%;
+padding:12px 15px;
+margin:8px 0;
+border-radius:16px;
+white-space:pre-wrap;
+line-height:1.5
+}
+.userMsg{
+margin-left:auto;
+background:#5148d9
+}
+.aiMsg{
+background:#192532
+}
+.chatInput{
+display:flex;
+gap:8px;
+padding-top:10px;
+border-top:1px solid #273544
+}
+.chatInput input{flex:1}
+pre{
+white-space:pre-wrap;
+background:#070b10;
+padding:14px;
+border-radius:12px;
+overflow:auto
+}
+.log{
+height:180px;
+overflow:auto;
+background:#06090d;
+padding:12px;
+border-radius:12px;
+font-family:monospace;
+font-size:13px
+}
+.preview{
+width:100%;
+max-width:700px;
+border-radius:16px;
+margin-top:15px;
+display:none;
+background:black
+}
+.thumb{
+width:100%;
+max-width:300px;
+border-radius:16px;
+margin-top:15px;
+display:none
+}
+.uploadBox{
+background:#0a1119;
+border:1px dashed #425468;
+border-radius:14px;
+padding:12px;
+margin-top:10px
+}
+.fileName{
+color:#aebaca;
+font-size:13px;
+margin-top:8px
+}
+.progress{
+height:10px;
+background:#263544;
+border-radius:20px;
+overflow:hidden;
+margin:15px 0
+}
+.progress div{
+height:100%;
+width:0;
+background:#635bff
+}
+#cameraPreview{
+width:100%;
+max-width:500px;
+border-radius:16px;
+background:black;
+display:none
+}
+.chatAttachment{
+max-width:240px;
+max-height:180px;
+border-radius:12px;
+display:block;
+margin-top:8px
+}
+.hidden{
+display:none!important
+}
+@media(max-width:800px){
+#app{grid-template-columns:1fr}
+.sidebar{display:none}
+.content{padding:12px}
+.msg{max-width:90%}
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<aside class="sidebar">
+
+<div class="logo">⚡ Prince AI</div>
+
+<div class="nav">
+
+<button class="active" onclick="showPage('chat',this)">💬 AI Chat</button>
+<button onclick="showPage('agent',this)">🤖 Agent Mode</button>
+<button onclick="showPage('image',this)">🖼 AI Image</button>
+<button onclick="showPage('appmaker',this)">📱 App Maker</button>
+<button onclick="showPage('location',this)">📍 Location</button>
+<button onclick="showPage('weather',this)">🌡 Temperature</button>
+<button onclick="showPage('knowledge',this)">📚 Knowledge</button>
+<button onclick="showPage('coding',this)">💻 Coding</button>
+<button onclick="showPage('security',this)">🛡 Security</button>
+<button onclick="showPage('server',this)">🖥 Server</button>
+<button onclick="showPage('media',this)">🎬 AI Video</button>
+<button onclick="showPage('settings',this)">⚙ Settings</button>
+
+</div>
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+
+<div>
+<strong>Prince AI</strong>
+<span id="connection" class="badge">Checking...</span>
+</div>
+
+<div>
+<span>Guest</span>
+</div>
+
+</header>
+
+<div class="content">
+
+<section id="chat" class="page active">
+
+<div class="card chat">
+
+<div id="messages" class="messages">
+
+<div class="msg aiMsg">
+Hello! I am Prince AI.
+How can I help you today?
+</div>
+
+</div>
+
+<div id="attachmentBox" class="uploadBox hidden">
+
+<div id="attachmentPreview"></div>
+
+<div id="attachmentName" class="fileName"></div>
+
+<button class="btn danger" onclick="clearAttachment()">
+Remove File
+</button>
+
+</div>
+
+<div class="chatInput">
+
+<button class="btn fileBtn" onclick="openChatFile()">
+＋
+</button>
+
+<input
+id="chatFile"
+type="file"
+class="hidden"
+accept="image/*,.txt,.md,.json,.html,.css,.js,.py,.php"
+onchange="handleChatFile()"
+>
+
+<input
+id="chatInput"
+placeholder="Ask Prince AI..."
+onkeydown="if(event.key==='Enter')sendMessage()"
+>
+
+<button class="btn" onclick="sendMessage()">
+Send
+</button>
+
+<button class="btn secondary" onclick="startSpeech()">
+🎙
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+<section id="agent" class="page">
+
+<div class="card">
+
+<h2>🤖 Agent Mode</h2>
+
+<p class="muted">
+Camera, microphone and location are optional.
+</p>
+
+<div class="grid">
+
+<div class="stat">
+Internet
+<div id="agentInternet" class="big">Checking</div>
+</div>
+
+<div class="stat">
+Camera
+<div id="cameraStatus" class="big">❌</div>
+</div>
+
+<div class="stat">
+Microphone
+<div id="micStatus" class="big">❌</div>
+</div>
+
+<div class="stat">
+Location
+<div id="locationStatus" class="big">❌</div>
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>🤖 Agent Control</h3>
+
+<div class="row">
+
+<button class="btn success" onclick="startAgent()">▶ Start</button>
+
+<button class="btn danger" onclick="stopAgent()">■ Stop</button>
+
+<button class="btn" onclick="agentTalk()">🎙 Talk</button>
+
+</div>
+
+<br>
+
+<span id="agentState" class="badge">Agent stopped</span>
+
+<pre id="agentAnswer">Agent answer will appear here.</pre>
+
+</div>
+
+<div class="card">
+
+<h3>📷 Permissions</h3>
+
+<video id="cameraPreview" autoplay playsinline></video>
+
+<br>
+
+<div class="row">
+
+<button class="btn" onclick="requestCamera()">📷 Camera</button>
+
+<button class="btn" onclick="requestMicrophone()">🎙 Microphone</button>
+
+<button class="btn" onclick="requestLocation()">📍 Location</button>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>🔊 Voice</h3>
+
+<select id="voiceList"></select>
+
+<br><br>
+
+<button class="btn" onclick="loadVoices()">🔄 Load Voices</button>
+
+<button class="btn" onclick="testVoice()">🔊 Test</button>
+
+<button class="btn secondary" onclick="stopSpeaking()">⏹ Stop</button>
+
+</div>
+
+<div class="card">
+
+<h3>📜 Agent Log</h3>
+
+<div id="agentLog" class="log"></div>
+
+</div>
+
+</section>
+
+<section id="image" class="page">
+
+<div class="card">
+
+<h2>🖼 Free AI Image Generator (No API Key Required)</h2>
+
+<textarea
+id="imagePrompt"
+placeholder="Describe the image you want to create..."
+></textarea>
+
+<br><br>
+
+<label>Image Engine</label>
+
+<select id="imageModel">
+
+<option value="flux">
+Pollinations Free AI (Fast & No Key)
+</option>
+
+</select>
+
+<br><br>
+
+<div class="row">
+
+<button class="btn" onclick="generateImage()">
+✨ Generate Image
+</button>
+
+</div>
+
+<div class="progress">
+<div id="imageProgress"></div>
+</div>
+
+<p id="imageStatus" class="muted"></p>
+
+<img id="generatedImage" class="preview">
+
+<br><br>
+
+<a
+id="imageDownload"
+class="btn"
+style="display:none"
+download="prince-ai-image.png"
+target="_blank"
+>
+💾 Save Image
+</a>
+
+<pre id="imageResult"></pre>
+
+</div>
+
+</section>
+
+<section id="appmaker" class="page">
+
+<div class="card">
+
+<h2>📱 App Maker</h2>
+
+<input id="appName" placeholder="App name">
+
+<br><br>
+
+<textarea
+id="appDescription"
+placeholder="Describe your app"
+></textarea>
+
+<br><br>
+
+<button class="btn" onclick="makeApp()">
+Create App Plan
+</button>
+
+<pre id="appResult"></pre>
+
+</div>
+
+</section>
+
+<section id="location" class="page">
+
+<div class="card">
+
+<h2>📍 Location</h2>
+
+<button class="btn" onclick="getLocation()">
+Get Location
+</button>
+
+<div id="locationResult" class="card"></div>
+
+</div>
+
+</section>
+
+<section id="weather" class="page">
+
+<div class="card">
+
+<h2>🌡 Temperature</h2>
+
+<button class="btn" onclick="getWeather()">
+Get Temperature
+</button>
+
+<div id="weatherResult" class="card"></div>
+
+</div>
+
+</section>
+
+<section id="knowledge" class="page">
+
+<div class="card">
+
+<h2>📚 Knowledge</h2>
+
+<textarea
+id="knowledgeQuestion"
+placeholder="Ask anything..."
+></textarea>
+
+<br><br>
+
+<button class="btn" onclick="knowledgeAsk()">
+Ask AI
+</button>
+
+<pre id="knowledgeResult"></pre>
+
+</div>
+
+</section>
+
+<section id="coding" class="page">
+
+<div class="card">
+
+<h2>💻 Coding Assistant</h2>
+
+<select id="language">
+
+<option>Python</option>
+<option>JavaScript</option>
+<option>HTML</option>
+<option>CSS</option>
+<option>PHP</option>
+<option>C</option>
+<option>C++</option>
+<option>Java</option>
+<option>Kotlin</option>
+
+</select>
+
+<br><br>
+
+<textarea
+id="codeQuestion"
+placeholder="What do you want to code?"
+></textarea>
+
+<br><br>
+
+<button class="btn" onclick="codingAsk()">
+Generate Code
+</button>
+
+<pre id="codeResult"></pre>
+
+</div>
+
+</section>
+
+<section id="security" class="page">
+
+<div class="card">
+
+<h2>🛡 Security Learning</h2>
+
+<p>
+Learn cybersecurity only on systems you own or have permission to test.
+</p>
+
+<div class="grid">
+
+<div class="stat">
+<h3>Networking</h3>
+<p>IP, DNS, HTTP and ports.</p>
+</div>
+
+<div class="stat">
+<h3>Web Security</h3>
+<p>Authentication and validation.</p>
+</div>
+
+<div class="stat">
+<h3>Linux</h3>
+<p>Commands and administration.</p>
+</div>
+
+<div class="stat">
+<h3>Privacy</h3>
+<p>Passwords and permissions.</p>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<section id="server" class="page">
+
+<div class="card">
+
+<h2>🖥 Server Creator</h2>
+
+<select id="serverLanguage">
+
+<option>Python Flask</option>
+<option>Node.js</option>
+<option>PHP</option>
+
+</select>
+
+<br><br>
+
+<input
+id="serverName"
+placeholder="Server name"
+>
+
+<br><br>
+
+<button class="btn" onclick="createServer()">
+Create Server
+</button>
+
+<pre id="serverResult"></pre>
+
+</div>
+
+</section>
+
+<section id="media" class="page">
+
+<div class="card">
+
+<h2>🎬 AI Video Generator</h2>
+
+<textarea
+id="mediaPrompt"
+placeholder="Describe your video..."
+></textarea>
+
+<br><br>
+
+<button class="btn" onclick="generateVideo()">
+🎬 Generate Video
+</button>
+
+<div class="progress">
+<div id="videoProgress"></div>
+</div>
+
+<p id="videoStatus" class="muted"></p>
+
+<video
+id="generatedVideo"
+class="preview"
+controls
+playsinline
+></video>
+
+<br><br>
+
+<a
+id="videoDownload"
+class="btn"
+style="display:none"
+download="prince-ai-video.mp4"
+>
+💾 Save Video
+</a>
+
+<pre id="mediaResult"></pre>
+
+</div>
+
+</section>
+
+<section id="settings" class="page">
+
+<div class="card">
+
+<h2>⚙ API Settings</h2>
+
+<label>OpenRouter API Key (Optional for Chat)</label>
+
+<input
+id="apiKeyInput"
+type="password"
+placeholder="sk-or-v1-..."
+>
+
+<br><br>
+
+<label>Chat Model</label>
+
+<input
+id="chatModelInput"
+value="google/gemini-2.0-flash-lite-001:free"
+>
+
+<br><br>
+
+<button class="btn" onclick="saveSettings()">
+Save Settings
+</button>
+
+<br><br>
+
+<p class="muted">
+Image generation works 100% free without any API key.
+</p>
+
+</div>
+
+</section>
+
+</div>
+</main>
+</div>
+
+<script>
+
+const OPENROUTER_API_KEY = "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";
+const CHAT_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+const DEFAULT_CHAT_MODEL = "nvidia/nemotron-3.5-super-vl:free";
+
+let agentRunning = false;
+let recognition = null;
+let cameraStream = null;
+let microphoneStream = null;
+let voices = [];
+let chatAttachment = null;
+
+function getAPIKey(){
+const saved = localStorage.getItem("prince_api_key");
+return saved || OPENROUTER_API_KEY;
+}
+
+function getChatModel(){
+let saved = localStorage.getItem("prince_chat_model");
+return saved ? saved.trim() : DEFAULT_CHAT_MODEL;
+}
+
+function showPage(id,button){
+document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+if(button)button.classList.add("active");
+}
+
+function updateConnection(){
+const online = navigator.onLine;
+const el = document.getElementById("connection");
+el.textContent = online ? "Online" : "Offline";
+el.className = "badge " + (online ? "online" : "offline");
+document.getElementById("agentInternet").textContent = online ? "Online" : "Offline";
+}
+
+function openChatFile(){
+document.getElementById("chatFile").click();
+}
+
+async function handleChatFile(){
+const file = document.getElementById("chatFile").files[0];
+if(!file)return;
+
+chatAttachment = file;
+const box = document.getElementById("attachmentBox");
+const preview = document.getElementById("attachmentPreview");
+const name = document.getElementById("attachmentName");
+
+box.classList.remove("hidden");
+name.textContent = file.name + " • " + Math.round(file.size/1024) + " KB";
+preview.innerHTML = "";
+
+if(file.type.startsWith("image/")){
+const img = document.createElement("img");
+img.className = "chatAttachment";
+img.src = URL.createObjectURL(file);
+preview.appendChild(img);
+}else{
+const text = await readTextFile(file);
+const pre = document.createElement("pre");
+pre.textContent = text.slice(0,5000);
+preview.appendChild(pre);
+}
+}
+
+function readTextFile(file){
+return new Promise((resolve,reject)=>{
+const reader = new FileReader();
+reader.onload = () => resolve(reader.result);
+reader.onerror = reject;
+reader.readAsText(file);
+});
+}
+
+function clearAttachment(){
+chatAttachment = null;
+document.getElementById("chatFile").value = "";
+document.getElementById("attachmentBox").classList.add("hidden");
+document.getElementById("attachmentPreview").innerHTML = "";
+}
+
+async function askAI(text, attachment){
+const apiKey = getAPIKey();
+if(!apiKey){
+throw new Error("API key is required for text chat. Please set OpenRouter key in Settings.");
+}
+
+let content = text;
+
+if(attachment){
+if(attachment.type.startsWith("image/")){
+const base64 = await fileToBase64(attachment);
+content = [
+{ type: "text", text: text || "Analyze this image." },
+{ type: "image_url", image_url: { url: base64 } }
+];
+}else{
+const fileText = await readTextFile(attachment);
+content = (text || "") + "\n\nAttached file: " + attachment.name + "\n\n" + fileText.slice(0,30000);
+}
+}
+
+const response = await fetch(CHAT_ENDPOINT, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"Authorization": "Bearer " + apiKey,
+"HTTP-Referer": location.href,
+"X-Title": "Prince AI"
+},
+body: JSON.stringify({
+model: getChatModel(),
+messages: [
+{
+role: "system",
+content: "You are Prince AI, a helpful, accurate and friendly multilingual AI assistant."
+},
+{
+role: "user",
+content: content
+}
+],
+temperature: 0.7
+})
+});
+
+const data = await response.json();
+
+if(!response.ok){
+throw new Error(data?.error?.message || "API error: "+response.status);
+}
+
+return data?.choices?.[0]?.message?.content || "No answer received.";
+}
+
+function fileToBase64(file){
+return new Promise((resolve,reject)=>{
+const reader = new FileReader();
+reader.onload = () => resolve(reader.result);
+reader.onerror = reject;
+reader.readAsDataURL(file);
+});
+}
+
+function addMessage(text,type){
+const div = document.createElement("div");
+div.className = "msg "+type;
+div.textContent = text;
+document.getElementById("messages").appendChild(div);
+const box = document.getElementById("messages");
+box.scrollTop = box.scrollHeight;
+return div;
+}
+
+async function sendMessage(){
+const input = document.getElementById("chatInput");
+const text = input.value.trim();
+
+if(!text && !chatAttachment)return;
+
+let displayText = text;
+if(chatAttachment){
+displayText += "\n📎 "+chatAttachment.name;
+}
+
+addMessage(displayText, "userMsg");
+input.value = "";
+
+const attachment = chatAttachment;
+clearAttachment();
+
+const ai = addMessage("Thinking...", "aiMsg");
+
+try{
+const responseText = await askAI(text || "Please analyze this file.", attachment);
+ai.textContent = responseText;
+speak(responseText);
+}catch(e){
+ai.textContent = "AI Error: "+e.message;
+}
+}
+
+function startSpeech(){
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(!SR){
+alert("Speech recognition is not supported.");
+return;
+}
+const r = new SR();
+r.lang = "bn-BD";
+r.interimResults = false;
+r.onresult = e => {
+document.getElementById("chatInput").value = e.results[0][0].transcript;
+};
+r.start();
+}
+
+function loadVoices(){
+if(!window.speechSynthesis)return;
+voices = speechSynthesis.getVoices();
+const select = document.getElementById("voiceList");
+if(select) {
+select.innerHTML = "";
+voices.forEach((voice,index)=>{
+const option = document.createElement("option");
+option.value = index;
+option.textContent = voice.name+" — "+voice.lang;
+select.appendChild(option);
+});
+}
+}
+
+function speak(text){
+if(!window.speechSynthesis)return;
+speechSynthesis.cancel();
+const voiceSelect = document.getElementById("voiceList");
+const index = voiceSelect ? voiceSelect.value : 0;
+const utterance = new SpeechSynthesisUtterance(text);
+if(voices[index]) utterance.voice = voices[index];
+utterance.rate = 1;
+utterance.pitch = 1;
+speechSynthesis.speak(utterance);
+}
+
+function testVoice(){
+speak("Hello. I am Prince AI. How can I help you?");
+}
+
+function stopSpeaking(){
+if(window.speechSynthesis) speechSynthesis.cancel();
+}
+
+function startAgent(){
+if(agentRunning)return;
+agentRunning = true;
+document.getElementById("agentState").textContent = "Agent running";
+agentLog("Agent started.");
+speak("Hello. Prince AI Agent is now active.");
+}
+
+function stopAgent(){
+agentRunning = false;
+if(recognition){
+try{ recognition.stop(); }catch(e){}
+recognition = null;
+}
+stopSpeaking();
+document.getElementById("agentState").textContent = "Agent stopped";
+agentLog("Agent stopped.");
+}
+
+function agentTalk(){
+if(!agentRunning){
+alert("Start Agent first.");
+return;
+}
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(!SR){
+const command = prompt("Speech recognition is unavailable. Type your command:");
+if(command) agentCommand(command);
+return;
+}
+
+recognition = new SR();
+recognition.lang = "bn-BD";
+recognition.interimResults = false;
+document.getElementById("agentAnswer").textContent = "🎙 Listening...";
+
+recognition.onresult = e => {
+const text = e.results[0][0].transcript;
+agentLog("You: "+text);
+agentCommand(text);
+};
+
+recognition.onerror = e => {
+agentLog("Speech error: "+e.error);
+};
+
+try{ recognition.start(); }catch(e){}
+}
+
+async function agentCommand(text){
+document.getElementById("agentAnswer").textContent = "Thinking...";
+try{
+const answer = await askAI(text);
+document.getElementById("agentAnswer").textContent = answer;
+speak(answer);
+}catch(e){
+document.getElementById("agentAnswer").textContent = e.message;
+}
+}
+
+function agentLog(text){
+const log = document.getElementById("agentLog");
+const div = document.createElement("div");
+div.textContent = "["+new Date().toLocaleTimeString()+"] "+text;
+log.appendChild(div);
+log.scrollTop = log.scrollHeight;
+}
+
+async function requestCamera(){
+try{
+cameraStream = await navigator.mediaDevices.getUserMedia({video:true});
+const video = document.getElementById("cameraPreview");
+video.srcObject = cameraStream;
+video.style.display = "block";
+document.getElementById("cameraStatus").textContent = "✅";
+agentLog("Camera permission granted.");
+}catch(e){
+agentLog("Camera error: "+e.message);
+}
+}
+
+async function requestMicrophone(){
+try{
+microphoneStream = await navigator.mediaDevices.getUserMedia({audio:true});
+document.getElementById("micStatus").textContent = "✅";
+agentLog("Microphone permission granted.");
+}catch(e){
+agentLog("Microphone error: "+e.message);
+}
+}
+
+function requestLocation(){
+if(!navigator.geolocation){
+agentLog("Location is not supported.");
+return;
+}
+
+navigator.geolocation.getCurrentPosition(
+()=>{
+document.getElementById("locationStatus").textContent = "✅";
+agentLog("Location permission granted.");
+},
+()=>{
+agentLog("Location permission denied.");
+}
+);
+}
+
+function imageProgress(value){
+document.getElementById("imageProgress").style.width = value+"%";
+}
+
+// ** Completely Free Image Generation using Pollinations AI (NO API KEY NEEDED) **
+async function generateImage(){
+const prompt = document.getElementById("imagePrompt").value.trim();
+if(!prompt){
+alert("Please describe the image you want to create.");
+return;
+}
+
+const status = document.getElementById("imageStatus");
+const image = document.getElementById("generatedImage");
+const download = document.getElementById("imageDownload");
+
+status.textContent = "Generating image...";
+image.style.display = "none";
+download.style.display = "none";
+imageProgress(30);
+
+try {
+const encodedPrompt = encodeURIComponent(prompt);
+// Direct URL generation without requiring any API keys
+const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random()*1000000)}`;
+
+image.onload = () => {
+imageProgress(100);
+status.textContent = "✅ Image generated successfully!";
+image.style.display = "block";
+download.href = imageUrl;
+download.style.display = "inline-block";
+};
+
+image.onerror = () => {
+status.textContent = "❌ Failed to load generated image. Please try again.";
+imageProgress(0);
+};
+
+image.src = imageUrl;
+
+} catch(e) {
+status.textContent = "❌ "+e.message;
+imageProgress(0);
+}
+}
+
+async function editImage(){
+alert("Please use Generate Image to create new images directly.");
+}
+
+function videoProgress(value){
+document.getElementById("videoProgress").style.width = value+"%";
+}
+
+async function generateVideo(){
+alert("Note: Video generation requires dedicated API.");
+}
+
+async function makeApp(){
+const name = document.getElementById("appName").value || "New App";
+const description = document.getElementById("appDescription").value || "Create an app.";
+const result = document.getElementById("appResult");
+result.textContent = "Creating...";
+
+try{
+result.textContent = await askAI(
+"Create an app development plan.\n"+
+"Name: "+name+
+"\nDescription: "+description+
+"\nGive features, UI, code structure and deployment steps."
+);
+}catch(e){
+result.textContent = e.message;
+}
+}
+
+async function knowledgeAsk(){
+const q = document.getElementById("knowledgeQuestion").value.trim();
+if(!q)return;
+
+const result = document.getElementById("knowledgeResult");
+result.textContent = "Thinking...";
+
+try{
+result.textContent = await askAI(q);
+}catch(e){
+result.textContent = e.message;
+}
+}
+
+async function codingAsk(){
+const language = document.getElementById("language").value;
+const question = document.getElementById("codeQuestion").value.trim();
+if(!question)return;
+
+const result = document.getElementById("codeResult");
+result.textContent = "Generating...";
+
+try{
+result.textContent = await askAI("Write complete working "+language+" code for:\n"+question);
+}catch(e){
+result.textContent = e.message;
+}
+}
+
+function getLocation(){
+if(!navigator.geolocation)return;
+navigator.geolocation.getCurrentPosition(
+p=>{
+const lat = p.coords.latitude;
+const lon = p.coords.longitude;
+document.getElementById("locationResult").innerHTML =
+"<b>Latitude:</b> "+lat+
+"<br><b>Longitude:</b> "+lon+
+"<br><br>"+
+"<a target='_blank' href='https://www.google.com/maps?q="+lat+","+lon+"'>Open Google Maps</a>";
+},
+()=>{
+document.getElementById("locationResult").textContent = "Location permission denied.";
+}
+);
+}
+
+async function getWeather(){
+const result = document.getElementById("weatherResult");
+result.textContent = "Getting location...";
+
+navigator.geolocation.getCurrentPosition(
+async p=>{
+try{
+const url = "https://api.open-meteo.com/v1/forecast"+
+"?latitude="+p.coords.latitude+
+"&longitude="+p.coords.longitude+
+"&current=temperature_2m"+
+"&temperature_unit=celsius";
+
+const response = await fetch(url);
+const data = await response.json();
+result.textContent = "Current temperature: "+data.current.temperature_2m+" °C";
+}catch(e){
+result.textContent = "Weather error.";
+}
+},
+()=>{
+result.textContent = "Location permission required.";
+}
+);
+}
+
+function createServer(){
+const language = document.getElementById("serverLanguage").value;
+const name = document.getElementById("serverName").value || "my-server";
+
+let code = "";
+if(language==="Python Flask"){
+code = "from flask import Flask\n\n"+
+"app=Flask(__name__)\n\n"+
+"@app.get('/')\n"+
+"def home():\n"+
+"    return {'status':'running'}\n\n"+
+"app.run(host='0.0.0.0',port=5000)";
+}else if(language==="Node.js"){
+code = "const express=require('express');\n"+
+"const app=express();\n\n"+
+"app.get('/',(req,res)=>{\n"+
+"res.json({status:'running'});\n"+
+"});\n\n"+
+"app.listen(3000,'0.0.0.0');";
+}else{
+code = "<?php\n"+
+"echo json_encode(['status'=>'running']);\n"+
+"?>";
+}
+
+document.getElementById("serverResult").textContent = "Server: "+name+"\n\n"+code;
+}
+
+function saveSettings(){
+const key = document.getElementById("apiKeyInput").value.trim();
+const chatModel = document.getElementById("chatModelInput").value.trim();
+
+if(key) localStorage.setItem("prince_api_key", key);
+if(chatModel) localStorage.setItem("prince_chat_model", chatModel);
+
+alert("Settings saved.");
+}
+
+function loadSettings(){
+const key = localStorage.getItem("prince_api_key");
+const chatModel = localStorage.getItem("prince_chat_model");
+
+if(key) document.getElementById("apiKeyInput").value = key;
+if(chatModel) document.getElementById("chatModelInput").value = chatModel;
+}
+
+window.addEventListener("online", updateConnection);
+window.addEventListener("offline", updateConnection);
+
+if(window.speechSynthesis){
+speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+window.addEventListener("load", ()=>{
+updateConnection();
+loadVoices();
+loadSettings();
+});
+
+</script>
+
+</body>
+</html>
